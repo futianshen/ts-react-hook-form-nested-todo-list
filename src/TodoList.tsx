@@ -112,7 +112,7 @@ function TodoList() {
               isGroup={field.isGroup}
               onTodoAdd={() => setValue(`${name}.${index}.isDone`, false)}
               renderSubTodo={(subFieldId, subIndex, onRemove) => (
-                <SubTodo
+                <Todo
                   key={subFieldId}
                   onRegister={(inputName) =>
                     register(`${name}.${index}.list.${subIndex}.${inputName}`)
@@ -132,33 +132,6 @@ function TodoList() {
         ))}
       </ol>
     </>
-  )
-}
-
-function Todo(props: {
-  onRegister: (inputName: "isDone" | "value") => UseFormRegisterReturn
-  onCheck: () => void
-  onRemove: () => void
-  children?: ReactElement
-}) {
-  const { onRegister, onCheck, onRemove, children } = props
-
-  return (
-    <li>
-      <input
-        type="checkbox"
-        {...onRegister("isDone")}
-        onChange={(e) => {
-          const { onChange } = onRegister(`isDone`)
-          onChange(e)
-          onCheck()
-        }}
-      />
-      <input {...onRegister(`value`)} type="text" />
-      <button onClick={onRemove}>Delete</button>
-      {children}
-      <hr />
-    </li>
   )
 }
 
@@ -197,12 +170,13 @@ function SubTodoList(props: {
   )
 }
 
-function SubTodo(props: {
+function Todo(props: {
   onRegister: (inputName: "isDone" | "value") => UseFormRegisterReturn
   onCheck: () => void
   onRemove: () => void
+  children?: ReactElement
 }) {
-  const { onRegister, onCheck, onRemove } = props
+  const { onRegister, onCheck, onRemove, children } = props
 
   return (
     <li>
@@ -215,8 +189,10 @@ function SubTodo(props: {
           onCheck()
         }}
       />
-      <input {...onRegister("value")} type="text" />
+      <input {...onRegister(`value`)} type="text" />
       <button onClick={onRemove}>Delete</button>
+      {children}
+      {children && <hr />}
     </li>
   )
 }

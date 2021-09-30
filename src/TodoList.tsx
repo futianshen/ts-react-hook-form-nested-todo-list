@@ -1,13 +1,8 @@
 import React from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, UseFormRegisterReturn } from "react-hook-form"
 
 import { ReactElement } from "react"
-import {
-  Control,
-  UseFormGetValues,
-  UseFormRegister,
-  UseFormSetValue,
-} from "react-hook-form"
+import { Control } from "react-hook-form"
 type FormValues = {
   nestedList: {
     isGroup: boolean
@@ -97,25 +92,38 @@ function TodoList() {
         {fields.map((field, index) => (
           <Todo
             key={field.id}
-            name={`${name}.${index}`}
-            onRegister={register}
-            onValuesGet={getValues}
-            onValueSet={setValue}
+            onRegister={(inputName) =>
+              register(`nestedList.${index}.${inputName}`)
+            }
+            onCheck={() => {
+              const currentTodo = getValues(`${name}.${index}`)
+              currentTodo.list.forEach((_, i) => {
+                setValue(
+                  `${name}.${index}.list.${i}.isDone`,
+                  currentTodo.isDone
+                )
+              })
+            }}
             onRemove={() => remove(index)}
           >
             <SubTodoList
               control={control}
-              name={`${name}.${index}`}
+              name={`${name}.${index}.list`}
               isGroup={field.isGroup}
-              onValueSet={setValue}
+              onTodoAdd={() => setValue(`${name}.${index}.isDone`, false)}
               renderSubTodo={(subFieldId, subIndex, onRemove) => (
                 <SubTodo
                   key={subFieldId}
-                  parentName={`${name}.${index}`}
-                  name={`${name}.${index}.list.${subIndex}`}
-                  onRegister={register}
-                  onValuesGet={getValues}
-                  onValueSet={setValue}
+                  onRegister={(inputName) =>
+                    register(`${name}.${index}.list.${subIndex}.${inputName}`)
+                  }
+                  onCheck={() => {
+                    const siblings = getValues(`${name}.${index}.list`)
+                    if (siblings.every((todo) => todo.isDone)) {
+                      return setValue(`${name}.${index}.isDone`, true)
+                    }
+                    setValue(`${name}.${index}.isDone`, false)
+                  }}
                   onRemove={onRemove}
                 />
               )}
@@ -128,31 +136,25 @@ function TodoList() {
 }
 
 function Todo(props: {
-  name: `nestedList.${number}`
-  onRegister: UseFormRegister<FormValues>
-  onValuesGet: UseFormGetValues<FormValues>
-  onValueSet: UseFormSetValue<FormValues>
+  onRegister: (inputName: "isDone" | "value") => UseFormRegisterReturn
+  onCheck: () => void
   onRemove: () => void
   children?: ReactElement
 }) {
-  const { name, onRegister, onValuesGet, onValueSet, onRemove, children } =
-    props
+  const { onRegister, onCheck, onRemove, children } = props
 
   return (
     <li>
       <input
         type="checkbox"
-        {...onRegister(`${name}.isDone`)}
+        {...onRegister("isDone")}
         onChange={(e) => {
-          const { onChange } = onRegister(`${name}.isDone`)
+          const { onChange } = onRegister(`isDone`)
           onChange(e)
-          const currentTodo = onValuesGet(name)
-          currentTodo.list.forEach((_, i) => {
-            onValueSet(`${name}.list.${i}.isDone`, currentTodo.isDone)
-          })
+          onCheck()
         }}
       />
-      <input {...onRegister(`${name}.value`)} type="text" />
+      <input {...onRegister(`value`)} type="text" />
       <button onClick={onRemove}>Delete</button>
       {children}
       <hr />
@@ -161,28 +163,25 @@ function Todo(props: {
 }
 
 function SubTodoList(props: {
-  name: `nestedList.${number}`
+  name: `nestedList.${number}.list`
   control: Control<FormValues>
   isGroup: boolean
-  onValueSet: UseFormSetValue<FormValues>
+  onTodoAdd: () => void
   renderSubTodo: (
     fieldId: string,
     index: number,
     onRemove: () => void
   ) => ReactElement
 }) {
-  const { name, control, isGroup, onValueSet, renderSubTodo } = props
-  const { fields, append, remove } = useFieldArray({
-    name: `${name}.list`,
-    control,
-  })
+  const { name, control, isGroup, onTodoAdd, renderSubTodo } = props
+  const { fields, append, remove } = useFieldArray({ name, control })
 
   return (
     <>
       {isGroup && (
         <button
           onClick={() => {
-            onValueSet(`${name}.isDone`, false)
+            onTodoAdd()
             append({ value: "todo", isDone: false })
           }}
         >
@@ -199,32 +198,24 @@ function SubTodoList(props: {
 }
 
 function SubTodo(props: {
-  parentName: `nestedList.${number}`
-  name: `nestedList.${number}.list.${number}`
-  onRegister: UseFormRegister<FormValues>
-  onValuesGet: UseFormGetValues<FormValues>
-  onValueSet: UseFormSetValue<FormValues>
+  onRegister: (inputName: "isDone" | "value") => UseFormRegisterReturn
+  onCheck: () => void
   onRemove: () => void
 }) {
-  const { parentName, name, onRegister, onValuesGet, onValueSet, onRemove } =
-    props
+  const { onRegister, onCheck, onRemove } = props
 
   return (
     <li>
       <input
         type="checkbox"
-        {...onRegister(`${name}.isDone`)}
+        {...onRegister("isDone")}
         onChange={(e) => {
-          const { onChange } = onRegister(`${name}.isDone`)
+          const { onChange } = onRegister(`isDone`)
           onChange(e)
-          const siblings = onValuesGet(`${parentName}.list`)
-          if (siblings.every((todo) => todo.isDone)) {
-            return onValueSet(`${parentName}.isDone`, true)
-          }
-          onValueSet(`${parentName}.isDone`, false)
+          onCheck()
         }}
       />
-      <input {...onRegister(`${name}.value`)} type="text" />
+      <input {...onRegister("value")} type="text" />
       <button onClick={onRemove}>Delete</button>
     </li>
   )

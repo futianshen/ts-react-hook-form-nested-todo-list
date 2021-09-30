@@ -1,10 +1,5 @@
 import React from "react"
-import {
-  useForm,
-  useFieldArray,
-  FormProvider,
-  useFormContext,
-} from "react-hook-form"
+import { useForm, useFieldArray } from "react-hook-form"
 
 import { ReactElement } from "react"
 import {
@@ -99,25 +94,34 @@ function TodoList() {
       </button>
 
       <ol>
-        <FormProvider {...form}>
-          {fields.map((field, index) => (
-            <Todo
-              key={field.id}
+        {fields.map((field, index) => (
+          <Todo
+            key={field.id}
+            name={`${name}.${index}`}
+            onRegister={register}
+            onValuesGet={getValues}
+            onValueSet={setValue}
+            onRemove={() => remove(index)}
+          >
+            <SubTodoList
+              control={control}
               name={`${name}.${index}`}
-              onRegister={register}
-              onValuesGet={getValues}
+              isGroup={field.isGroup}
               onValueSet={setValue}
-              onRemove={() => remove(index)}
-            >
-              <SubTodoList
-                control={control}
-                name={`${name}.${index}`}
-                isGroup={field.isGroup}
-                onValueSet={setValue}
-              />
-            </Todo>
-          ))}
-        </FormProvider>
+              renderSubTodo={(subFieldId, subIndex, onRemove) => (
+                <SubTodo
+                  key={subFieldId}
+                  parentName={`${name}.${index}`}
+                  name={`${name}.${index}.list.${subIndex}`}
+                  onRegister={register}
+                  onValuesGet={getValues}
+                  onValueSet={setValue}
+                  onRemove={onRemove}
+                />
+              )}
+            />
+          </Todo>
+        ))}
       </ol>
     </>
   )
@@ -161,8 +165,13 @@ function SubTodoList(props: {
   control: Control<FormValues>
   isGroup: boolean
   onValueSet: UseFormSetValue<FormValues>
+  renderSubTodo: (
+    fieldId: string,
+    index: number,
+    onRemove: () => void
+  ) => ReactElement
 }) {
-  const { name, control, isGroup, onValueSet } = props
+  const { name, control, isGroup, onValueSet, renderSubTodo } = props
   const { fields, append, remove } = useFieldArray({
     name: `${name}.list`,
     control,
@@ -181,14 +190,9 @@ function SubTodoList(props: {
         </button>
       )}
       <ol>
-        {fields.map((field, index) => (
-          <SubTodo
-            key={field.id}
-            parentName={name}
-            name={`${name}.list.${index}`}
-            onRemove={() => remove(index)}
-          />
-        ))}
+        {fields.map((field, index) =>
+          renderSubTodo(field.id, index, () => remove(index))
+        )}
       </ol>
     </>
   )
@@ -197,27 +201,30 @@ function SubTodoList(props: {
 function SubTodo(props: {
   parentName: `nestedList.${number}`
   name: `nestedList.${number}.list.${number}`
+  onRegister: UseFormRegister<FormValues>
+  onValuesGet: UseFormGetValues<FormValues>
+  onValueSet: UseFormSetValue<FormValues>
   onRemove: () => void
 }) {
-  const { parentName, name, onRemove } = props
-  const { register, getValues, setValue } = useFormContext<FormValues>()
+  const { parentName, name, onRegister, onValuesGet, onValueSet, onRemove } =
+    props
 
   return (
     <li>
       <input
         type="checkbox"
-        {...register(`${name}.isDone`)}
+        {...onRegister(`${name}.isDone`)}
         onChange={(e) => {
-          const { onChange } = register(`${name}.isDone`)
+          const { onChange } = onRegister(`${name}.isDone`)
           onChange(e)
-          const siblings = getValues(`${parentName}.list`)
+          const siblings = onValuesGet(`${parentName}.list`)
           if (siblings.every((todo) => todo.isDone)) {
-            return setValue(`${parentName}.isDone`, true)
+            return onValueSet(`${parentName}.isDone`, true)
           }
-          setValue(`${parentName}.isDone`, false)
+          onValueSet(`${parentName}.isDone`, false)
         }}
       />
-      <input {...register(`${name}.value`)} type="text" />
+      <input {...onRegister(`${name}.value`)} type="text" />
       <button onClick={onRemove}>Delete</button>
     </li>
   )

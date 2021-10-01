@@ -1,5 +1,10 @@
 import React from "react"
-import { useForm, useFieldArray, UseFormRegisterReturn } from "react-hook-form"
+import {
+  useForm,
+  useFieldArray,
+  UseFormRegisterReturn,
+  FieldArrayWithId,
+} from "react-hook-form"
 
 import { ReactElement } from "react"
 import { Control } from "react-hook-form"
@@ -39,57 +44,32 @@ const initialList: FormValues["nestedList"] = [
   },
 ]
 
-function TodoList() {
+function TodoForm() {
   const form = useForm<FormValues>({
     defaultValues: {
       nestedList: initialList,
     },
   })
   const name = "nestedList"
-  const { control, getValues, register, setValue, handleSubmit } = form
-  const { fields, prepend, remove } = useFieldArray({ name, control })
-
-  const save = handleSubmit((value) => {
+  const { control, register, getValues, setValue, handleSubmit } = form
+  const handleSave = handleSubmit((value) => {
     localStorage.setItem("todoList", JSON.stringify(value.nestedList))
     alert("success")
   })
+  const handleLoad = () => {
+    setValue("nestedList", JSON.parse(localStorage.getItem("todoList") || ""))
+    alert("success")
+  }
 
   return (
     <>
-      <button onClick={save}>Save</button>
-      <button
-        onClick={() => {
-          setValue(
-            "nestedList",
-            JSON.parse(localStorage.getItem("todoList") || "")
-          )
-          alert("success")
-        }}
-      >
-        Load
-      </button>
-      <button
-        onClick={() => {
-          prepend({ value: "todo", isDone: false, isGroup: false })
-        }}
-      >
-        Add Todo
-      </button>
-      <button
-        onClick={() =>
-          prepend({
-            value: "todoGroup",
-            isDone: false,
-            isGroup: true,
-            list: [{ value: "todo", isDone: false }],
-          })
-        }
-      >
-        Add Group
-      </button>
+      <button onClick={handleSave}>Save</button>
+      <button onClick={handleLoad}>Load</button>
 
-      <ol>
-        {fields.map((field, index) => (
+      <TodoList
+        name={name}
+        control={control}
+        renderTodo={(field, index, onRemove) => (
           <Todo
             key={field.id}
             onRegister={(inputName) =>
@@ -104,16 +84,19 @@ function TodoList() {
                 )
               })
             }}
-            onRemove={() => remove(index)}
+            onRemove={onRemove}
           >
-            <SubTodoList
-              control={control}
+            <TodoList
               name={`${name}.${index}.list`}
-              isGroup={field.isGroup}
-              onTodoAdd={() => setValue(`${name}.${index}.isDone`, false)}
-              renderSubTodo={(subFieldId, subIndex, onRemove) => (
+              control={control}
+              onTodoAdd={() => {
+                if (getValues(`${name}.${index}.isDone`)) {
+                  setValue(`${name}.${index}.isDone`, false)
+                }
+              }}
+              renderTodo={(subField, subIndex, onRemove) => (
                 <Todo
-                  key={subFieldId}
+                  key={subField.id}
                   onRegister={(inputName) =>
                     register(`${name}.${index}.list.${subIndex}.${inputName}`)
                   }
@@ -129,41 +112,72 @@ function TodoList() {
               )}
             />
           </Todo>
-        ))}
-      </ol>
+        )}
+      />
     </>
   )
 }
 
-function SubTodoList(props: {
-  name: `nestedList.${number}.list`
+function TodoList(props: {
+  name: "nestedList" | `nestedList.${number}.list`
   control: Control<FormValues>
-  isGroup: boolean
-  onTodoAdd: () => void
-  renderSubTodo: (
-    fieldId: string,
+  renderTodo: (
+    field: FieldArrayWithId<
+      FormValues,
+      "nestedList" | `nestedList.${number}.list`,
+      "id"
+    >,
     index: number,
     onRemove: () => void
   ) => ReactElement
+  onTodoAdd?: () => void
 }) {
-  const { name, control, isGroup, onTodoAdd, renderSubTodo } = props
-  const { fields, append, remove } = useFieldArray({ name, control })
+  const { name, control, renderTodo, onTodoAdd } = props
+  const { fields, prepend, remove } = useFieldArray({ name, control })
 
   return (
     <>
-      {isGroup && (
-        <button
-          onClick={() => {
-            onTodoAdd()
-            append({ value: "todo", isDone: false })
-          }}
-        >
-          Add Todo
-        </button>
+      {onTodoAdd ? (
+        <>
+          <button
+            onClick={() => {
+              onTodoAdd()
+              prepend({ value: "todo", isDone: false })
+            }}
+          >
+            Add Todo
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            onClick={() => {
+              prepend({
+                value: "todo",
+                isDone: false,
+                isGroup: false,
+              } as any)
+            }}
+          >
+            Add Todo
+          </button>
+          <button
+            onClick={() =>
+              prepend({
+                value: "todoGroup",
+                isDone: false,
+                isGroup: true,
+                list: [{ value: "todo", isDone: false }],
+              } as any)
+            }
+          >
+            Add Group
+          </button>
+        </>
       )}
       <ol>
         {fields.map((field, index) =>
-          renderSubTodo(field.id, index, () => remove(index))
+          renderTodo(field, index, () => remove(index))
         )}
       </ol>
     </>
@@ -197,4 +211,4 @@ function Todo(props: {
   )
 }
 
-export default TodoList
+export default TodoForm

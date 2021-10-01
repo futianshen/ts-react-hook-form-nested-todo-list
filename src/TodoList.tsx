@@ -80,7 +80,8 @@ function TodoForm() {
             <TodoList
               name={`${name}.${index}.list`}
               control={control}
-              onTodoAdd={() => {
+              onTodoAdd={(prepend) => {
+                prepend({ value: "todo", isDone: false })
                 if (getValues(`${name}.${index}.isDone`) === true) {
                   setValue(`${name}.${index}.isDone`, false)
                 }
@@ -112,7 +113,9 @@ function TodoForm() {
 function TodoList(props: {
   name: "nestedList" | `nestedList.${number}.list`
   control: Control<FormValues>
-  onTodoAdd?: () => void
+  onTodoAdd?: (
+    prepend: (todo: { value: string; isDone: boolean }) => void
+  ) => void
   renderTodo?: (
     fieldId: string,
     index: number,
@@ -125,16 +128,9 @@ function TodoList(props: {
   return (
     <>
       {onTodoAdd ? (
-        <>
-          <button
-            onClick={() => {
-              onTodoAdd()
-              prepend({ value: "todo", isDone: false } as any)
-            }}
-          >
-            Add Todo
-          </button>
-        </>
+        <button onClick={() => onTodoAdd((todo) => prepend(todo as any))}>
+          Add Todo
+        </button>
       ) : (
         <>
           <button

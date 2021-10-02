@@ -54,8 +54,9 @@ function TodoForm() {
 
   return (
     <>
-      <button onClick={handleSave}>Save</button>
-      <button onClick={handleLoad}>Load</button>
+      <button onClick={handleSave}>↑ Save</button>
+      <button onClick={handleLoad}>↓ Load</button>
+      <button onClick={() => setValue("nestedList", [])}>X Clear</button>
 
       <TodoList
         name={name}
@@ -127,35 +128,31 @@ function TodoList(props: {
 
   return (
     <>
-      {onTodoAdd ? (
-        <button onClick={() => onTodoAdd((todo) => prepend(todo as any))}>
-          Add Todo
+      {onTodoAdd === undefined && (
+        <button
+          onClick={() =>
+            prepend({
+              value: "todo group",
+              isDone: false,
+              list: [{ value: "todo", isDone: false }],
+            } as any)
+          }
+        >
+          + Group
         </button>
-      ) : (
-        <>
-          <button
-            onClick={() => {
-              prepend({
+      )}
+      <button
+        onClick={() => {
+          onTodoAdd
+            ? onTodoAdd((todo) => prepend(todo as any))
+            : prepend({
                 value: "todo",
                 isDone: false,
               } as any)
-            }}
-          >
-            Add Todo
-          </button>
-          <button
-            onClick={() =>
-              prepend({
-                value: "todoGroup",
-                isDone: false,
-                list: [{ value: "todo", isDone: false }],
-              } as any)
-            }
-          >
-            Add Group
-          </button>
-        </>
-      )}
+        }}
+      >
+        + Todo
+      </button>
       {renderTodo && (
         <ol>
           {fields.map((field: { id: string }, index) =>
@@ -187,7 +184,7 @@ function Todo(props: {
         onChange={handleChange}
       />
       <input {...onRegister?.("value")} type="text" />
-      <button onClick={onRemove}>Delete</button>
+      <button onClick={onRemove}>x</button>
       {children}
       {children && <hr />}
     </li>

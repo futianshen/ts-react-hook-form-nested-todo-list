@@ -4,15 +4,15 @@ import styled from "styled-components"
 import { useForm } from "react-hook-form" // react hook
 
 // type 複用
-import { FC } from "react" // from library
+import { FC } from "react" // from library type definition
 import { FormValues, NestedList } from "../types/todo"
 
 // UI Component 複用
-import { Button, ButtonGroup } from "@geist-ui/react" // from library
+import { Button, ButtonGroup } from "@geist-ui/react" // from any library
 import { Todo, TodoList } from "../components/todo"
 
 // 樣式 複用
-import { ContainerMixin, StyledAddButton } from "../style"
+import { ContainerMixin, StyledAddButton } from "../style" // from any css in js solution
 const StyledSection = styled.section`
   ${ContainerMixin}
 `

@@ -1,11 +1,9 @@
 import { ReactElement } from "react"
 import { useFieldArray } from "react-hook-form"
-
 import { Control } from "react-hook-form/dist/types/form"
 import styled from "styled-components"
 import { ContainerMixin } from "../../style"
 import { FormValues } from "../../types/todo"
-import Todo from "./Todo"
 
 const StyledList = styled.ol`
   ${ContainerMixin}
@@ -43,7 +41,5 @@ function TodoList(props: {
     </>
   )
 }
-
-TodoList.Todo = Todo
 
 export default TodoList

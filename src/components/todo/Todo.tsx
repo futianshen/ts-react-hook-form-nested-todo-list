@@ -3,6 +3,7 @@ import { Delete } from "@geist-ui/react-icons"
 import { ChangeEventHandler, ReactElement } from "react"
 import { UseFormRegisterReturn } from "react-hook-form/dist/types/form"
 import styled from "styled-components"
+import { TodoList } from "../../components/todo"
 
 const StyledCheckbox = styled.input`
   width: 2rem;
@@ -46,5 +47,7 @@ function Todo(props: {
     </li>
   )
 }
+
+Todo.TodoList = TodoList
 
 export default Todo

@@ -1,7 +1,7 @@
-import TodoList from "./TodoList"
+import TodoForm from "./TodoForm"
 
 function App() {
-  return <TodoList />
+  return <TodoForm />
 }
 
 export default App

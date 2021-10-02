@@ -1,7 +1,21 @@
 import React from "react"
-import { useForm } from "react-hook-form" // react hook 邏輯複用
-import { TodoList, Todo } from "../components/todo" // Component 複用
-import { FormValues, NestedList } from "../types/todo" // type 複用
+import styled from "styled-components"
+// logic 複用
+import { useForm } from "react-hook-form" // react hook
+
+// type 複用
+import { FC } from "react" // from library
+import { FormValues, NestedList } from "../types/todo"
+
+// UI Component 複用
+import { Button, ButtonGroup } from "@geist-ui/react" // from library
+import { Todo, TodoList } from "../components/todo"
+
+// 樣式 複用
+import { ContainerMixin, StyledAddButton } from "../style"
+const StyledSection = styled.section`
+  ${ContainerMixin}
+`
 
 const initialList: NestedList = [
   {
@@ -24,7 +38,7 @@ const initialList: NestedList = [
   },
 ]
 
-function TodoForm() {
+const TodoForm: FC = function () {
   const form = useForm<FormValues>({
     defaultValues: {
       nestedList: initialList,
@@ -41,19 +55,19 @@ function TodoForm() {
   }
 
   return (
-    <>
-      <div className="flex gap-1">
-        <button onClick={handleSave}>↑ Save</button>
-        <button onClick={handleLoad}>↓ Load</button>
-        <button onClick={() => setValue("nestedList", [])}>X Clear</button>
-      </div>
+    <StyledSection className="flex flex-col items-center">
+      <ButtonGroup className="d-flex gap-1 mx-0">
+        <Button onClick={handleSave}>↑ Save</Button>
+        <Button onClick={handleLoad}>↓ Load</Button>
+        <Button onClick={() => setValue("nestedList", [])}>X Clear</Button>
+      </ButtonGroup>
 
       <TodoList
         name="nestedList"
         control={control}
         renderAddButton={(prepend) => (
-          <>
-            <button
+          <ButtonGroup className="d-flex justify-center gap-1">
+            <Button
               onClick={() =>
                 prepend({
                   value: "",
@@ -62,8 +76,8 @@ function TodoForm() {
               }
             >
               + Todo
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() =>
                 prepend({
                   value: "",
@@ -73,64 +87,72 @@ function TodoForm() {
               }
             >
               + Group
-            </button>
-          </>
+            </Button>
+          </ButtonGroup>
         )}
         renderTodo={(fieldId, index, onRemove) => (
-          <Todo
-            key={fieldId}
-            onRegister={(name) => register(`nestedList.${index}.${name}`)}
-            onCheck={() => {
-              const todo = getValues(`nestedList.${index}`)
-              todo.list?.forEach((_, subIndex) => {
-                setValue(
-                  `nestedList.${index}.list.${subIndex}.isDone`,
-                  todo.isDone
-                )
-              })
-            }}
-            onRemove={onRemove}
-          >
-            <TodoList
-              name={`nestedList.${index}.list`}
-              control={control}
-              renderAddButton={(prepend) => (
-                <button
-                  onClick={() => {
-                    prepend({
-                      value: "",
-                      isDone: false,
-                    })
-                    if (getValues(`nestedList.${index}.isDone`) === true) {
-                      setValue(`nestedList.${index}.isDone`, false)
-                    }
-                  }}
-                >
-                  + Todo
-                </button>
-              )}
-              renderTodo={(subField, subIndex, onRemove) => (
-                <Todo
-                  key={subField}
-                  onRegister={(name) =>
-                    register(`nestedList.${index}.list.${subIndex}.${name}`)
-                  }
-                  onCheck={() => {
-                    const subTodoList =
-                      getValues(`nestedList.${index}.list`) || []
-                    if (subTodoList.every((todo) => todo.isDone)) {
-                      return setValue(`nestedList.${index}.isDone`, true)
-                    }
-                    setValue(`nestedList.${index}.isDone`, false)
-                  }}
-                  onRemove={onRemove}
+          <div key={fieldId} className="mb-2">
+            <Todo
+              key={fieldId}
+              onRegister={(name) => register(`nestedList.${index}.${name}`)}
+              onCheck={() => {
+                const todo = getValues(`nestedList.${index}`)
+                todo.list?.forEach((_, subIndex) => {
+                  setValue(
+                    `nestedList.${index}.list.${subIndex}.isDone`,
+                    todo.isDone
+                  )
+                })
+              }}
+              onRemove={onRemove}
+            >
+              <div className="flex gap-1">
+                <TodoList
+                  name={`nestedList.${index}.list`}
+                  control={control}
+                  renderAddButton={(prepend) => (
+                    <StyledAddButton
+                      onClick={() => {
+                        prepend({
+                          value: "",
+                          isDone: false,
+                        })
+                        if (getValues(`nestedList.${index}.isDone`) === true) {
+                          setValue(`nestedList.${index}.isDone`, false)
+                        }
+                      }}
+                      auto
+                    >
+                      +
+                    </StyledAddButton>
+                  )}
+                  renderTodo={(subField, subIndex, onRemove) => (
+                    <div key={subField} className="mb-2">
+                      <Todo
+                        onRegister={(name) =>
+                          register(
+                            `nestedList.${index}.list.${subIndex}.${name}`
+                          )
+                        }
+                        onCheck={() => {
+                          const subTodoList =
+                            getValues(`nestedList.${index}.list`) || []
+                          if (subTodoList.every((todo) => todo.isDone)) {
+                            return setValue(`nestedList.${index}.isDone`, true)
+                          }
+                          setValue(`nestedList.${index}.isDone`, false)
+                        }}
+                        onRemove={onRemove}
+                      />
+                    </div>
+                  )}
                 />
-              )}
-            />
-          </Todo>
+              </div>
+            </Todo>
+          </div>
         )}
       />
-    </>
+    </StyledSection>
   )
 }
 

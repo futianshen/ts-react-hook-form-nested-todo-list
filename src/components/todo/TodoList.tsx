@@ -2,7 +2,14 @@ import { ReactElement } from "react"
 import { useFieldArray } from "react-hook-form"
 
 import { Control } from "react-hook-form/dist/types/form"
+import styled from "styled-components"
+import { ContainerMixin } from "../../style"
 import { FormValues } from "../../types/todo"
+import Todo from "./Todo"
+
+const StyledList = styled.ol`
+  ${ContainerMixin}
+`
 
 function TodoList(props: {
   name: "nestedList" | `nestedList.${number}.list`
@@ -27,14 +34,16 @@ function TodoList(props: {
     <>
       {renderAddButton?.((todo) => prepend(todo as any))}
       {renderTodo && (
-        <ol>
+        <StyledList className="d-flex gap-3">
           {fields.map((field: { id: string }, index) =>
             renderTodo(field.id, index, () => remove(index))
           )}
-        </ol>
+        </StyledList>
       )}
     </>
   )
 }
+
+TodoList.Todo = Todo
 
 export default TodoList

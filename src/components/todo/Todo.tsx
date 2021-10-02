@@ -1,5 +1,17 @@
+import { Divider } from "@geist-ui/react"
+import { Delete } from "@geist-ui/react-icons"
 import { ChangeEventHandler, ReactElement } from "react"
 import { UseFormRegisterReturn } from "react-hook-form/dist/types/form"
+import styled from "styled-components"
+
+const StyledCheckbox = styled.input`
+  width: 2rem;
+  height: 2rem;
+`
+
+const StyledTextInput = styled.input`
+  height: 2rem;
+`
 
 function Todo(props: {
   onRegister: (name: "isDone" | "value") => UseFormRegisterReturn
@@ -15,15 +27,22 @@ function Todo(props: {
 
   return (
     <li>
-      <input
-        type="checkbox"
-        {...onRegister("isDone")}
-        onChange={handleChange}
-      />
-      <input {...onRegister("value")} type="text" placeholder="todo" />
-      <button onClick={onRemove}>x</button>
+      <div className="flex items-center gap-3 mb-3">
+        <StyledCheckbox
+          type="checkbox"
+          {...onRegister("isDone")}
+          onChange={handleChange}
+        />
+        <StyledTextInput
+          className="flex-grow"
+          {...onRegister("value")}
+          type="text"
+          placeholder="todo"
+        />
+        <Delete onClick={onRemove} />
+      </div>
       {children}
-      {children && <hr />}
+      {children && <Divider />}
     </li>
   )
 }
